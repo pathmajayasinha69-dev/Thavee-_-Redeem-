@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>THAVEE REDEEM</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
+
+body{
+  background:#050510;
+  color:white;
+  min-height:100vh;
+}
+
+/* BACKGROUND */
+.bg{position:fixed;inset:0;z-index:-1;overflow:hidden}
+.triangle{
+  position:absolute;
+  width:0;height:0;
+  border-left:12px solid transparent;
+  border-right:12px solid transparent;
+  border-bottom:20px solid rgba(160,80,255,.6);
+  animation:float 10s linear infinite;
+}
+@keyframes float{
+  from{transform:translateY(110vh) rotate(0deg)}
+  to{transform:translateY(-20vh) rotate(360deg)}
+}
+
+/* CARD */
+.container{
+  max-width:900px;
+  margin:80px auto;
+  background:rgba(20,20,40,.9);
+  border-radius:20px;
+  padding:40px;
+  text-align:center;
+  box-shadow:0 0 30px rgba(160,80,255,.7);
+}
+
+h1{color:#caa6ff;font-size:42px;margin-bottom:25px}
+
+/* INPUT */
+.input-wrap{
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  flex-wrap:wrap;
+}
+#redeemInput{
+  width:100%;
+  max-width:600px;
+  height:80px;
+  font-size:26px;
+  text-align:center;
+  border-radius:14px;
+  border:none;
+}
+
+/* BUTTONS */
+.btn{
+  margin-top:15px;
+  padding:18px 50px;
+  font-size:24px;
+  border:none;
+  border-radius:16px;
+  cursor:pointer;
+  color:white;
+  background:linear-gradient(45deg,#7b2cff,#ff4fd8);
+}
+
+.small-btn{
+  padding:18px 25px;
+  font-size:20px;
+}
+
+#result{margin-top:25px;font-size:22px}
+
+/* ADMIN */
+#adminLoginBox,#adminPanel{display:none;margin-top:25px}
+.admin-box{
+  background:#0e0e22;
+  padding:20px;
+  border-radius:12px;
+  text-align:left;
+}
+.admin-box input{
+  width:100%;
+  padding:10px;
+  margin-bottom:10px;
+  border-radius:8px;
+  border:none;
+}
+</style>
+</head>
+
+<body>
+
+<div class="bg" id="bg"></div>
+
+<div class="container">
+  <h1>THAVEE REDEEM</h1>
+
+  <!-- CUSTOMER -->
+  <div class="input-wrap">
+    <input id="redeemInput" placeholder="ENTER REDEEM CODE">
+    <button class="btn small-btn" onclick="pasteCode()">📋 PASTE</button>
+  </div>
+
+  <button class="btn" onclick="redeem()">REDEEM</button>
+  <div id="result"></div>
+
+  <!-- ADMIN -->
+  <button class="btn" onclick="showAdmin()">ADMIN</button>
+
+  <div id="adminLoginBox">
+    <input id="adminPass" type="password" placeholder="ADMIN PASSWORD">
+    <button class="btn" onclick="adminLogin()">LOGIN</button>
+  </div>
+
+  <div id="adminPanel">
+    <div class="admin-box">
+      <h3>Create Redeem Code</h3>
+      <input id="gift1" placeholder="Gift (WEEKLY)">
+      <input id="gift2" placeholder="Gift (optional)">
+      <input id="gift3" placeholder="Gift (optional)">
+      <button class="btn" onclick="createCode()">GENERATE</button>
+      <div id="adminMsg"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* BACKGROUND */
+for(let i=0;i<30;i++){
+  let t=document.createElement("div");
+  t.className="triangle";
+  t.style.left=Math.random()*100+"%";
+  t.style.animationDuration=(6+Math.random()*8)+"s";
+  bg.appendChild(t);
+}
+
+/* STORAGE STRUCTURE */
+let codes = JSON.parse(localStorage.getItem("THAVEE_CODES")||"{}");
+
+/* PASTE BUTTON */
+async function pasteCode(){
+  try{
+    const text = await navigator.clipboard.readText();
+    redeemInput.value = text.trim();
+  }catch{
+    alert("Paste not allowed on this browser");
+  }
+}
+
+/* REDEEM */
+function redeem(){
+  const code = redeemInput.value.trim();
+  if(!codes[code] || codes[code].used){
+    result.innerHTML="❌ Invalid or Already Used Code";
+    return;
+  }
+
+  result.innerHTML="<h3>YOUR GIFT 🎁</h3><ul>"+
+    codes[code].gifts.map(g=>"<li>"+g+"</li>").join("")+
+    "</ul>";
+
+  codes[code].used = true;
+  localStorage.setItem("THAVEE_CODES",JSON.stringify(codes));
+}
+
+/* ADMIN */
+function showAdmin(){ adminLoginBox.style.display="block"; }
+
+function adminLogin(){
+  if(adminPass.value==="thavee2007@"){
+    adminLoginBox.style.display="none";
+    adminPanel.style.display="block";
+  }else alert("Wrong Password");
+}
+
+/* CREATE CODE */
+function createCode(){
+  let gifts=[];
+  ["gift1","gift2","gift3"].forEach(id=>{
+    let v=document.getElementById(id).value.trim();
+    if(v) gifts.push(v);
+  });
+  if(!gifts.length) return alert("Add gifts");
+
+  let code="THAVEE"+Math.random().toString(36).substring(2,8).toUpperCase();
+  codes[code]={gifts:gifts,used:false};
+  localStorage.setItem("THAVEE_CODES",JSON.stringify(codes));
+
+  adminMsg.innerText="Created Code: "+code;
+}
+</script>
+
+</body>
+</html>
